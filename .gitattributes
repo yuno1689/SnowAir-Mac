@@ -1,0 +1,5 @@
+# 统一换行符为 LF，避免 Windows CRLF 影响 macOS 编译
+* text=auto eol=lf
+*.swift text eol=lf
+*.yml text eol=lf
+*.md text eol=lf

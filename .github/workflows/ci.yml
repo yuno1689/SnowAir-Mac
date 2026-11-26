@@ -1,0 +1,58 @@
+name: SnowAirMac CI
+
+# 云 Mac 编译 + 单元测试。
+# 触发：push / PR / 手动。公开仓库 macOS runner 免费不限量；私有仓库按 10x 倍率扣分钟。
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    # macos-15 = Apple Silicon M1 / Xcode 16.x / Swift 5.10+
+    # 目标部署版本由 Package.swift 的 .macOS(.v14) 锁定，不随 runner 变化
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # 兼容两种推法：只推 SnowAir-Mac 目录 / 推整个上级目录
+      - name: 定位 Package.swift
+        shell: bash
+        run: |
+          if [ -f Package.swift ]; then
+            echo "PKG_DIR=." >> "$GITHUB_ENV"
+          elif [ -f SnowAir-Mac/Package.swift ]; then
+            echo "PKG_DIR=SnowAir-Mac" >> "$GITHUB_ENV"
+          else
+            echo "::error::找不到 Package.swift（已尝试 ./ 与 ./SnowAir-Mac/）"
+            exit 1
+          fi
+
+      - name: 工具链版本
+        shell: bash
+        run: cd "$PKG_DIR" && swift --version
+
+      - name: Debug 编译
+        shell: bash
+        run: cd "$PKG_DIR" && swift build 2>&1 | tee /tmp/snowair-build.log
+
+      - name: 单元测试
+        shell: bash
+        run: cd "$PKG_DIR" && swift test 2>&1 | tee /tmp/snowair-test.log
+
+      - name: Release 编译
+        shell: bash
+        run: cd "$PKG_DIR" && swift build -c release 2>&1 | tee /tmp/snowair-release.log
+
+      - name: 上传日志（失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snowair-ci-logs
+          path: |
+            /tmp/snowair-build.log
+            /tmp/snowair-test.log
+            /tmp/snowair-release.log
+          retention-days: 7

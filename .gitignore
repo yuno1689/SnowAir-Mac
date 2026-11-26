@@ -1,0 +1,16 @@
+# Swift build
+.build/
+.swiftpm/
+*.xcodeproj/
+DerivedData/
+
+# macOS
+.DS_Store
+*.swp
+
+# 本地配置（便携模式会生成）
+config.json
+
+# 打包产物
+*.dmg
+*.app/
