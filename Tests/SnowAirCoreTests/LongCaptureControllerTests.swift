@@ -2,6 +2,7 @@ import XCTest
 import CoreGraphics
 @testable import SnowAirCore
 
+@MainActor
 final class LongCaptureControllerTests: XCTestCase {
 
     private func solid() -> CGImage {
@@ -17,7 +18,7 @@ final class LongCaptureControllerTests: XCTestCase {
         let controller = LongCaptureController(interval: 0.01, overlapPixels: 0, maxFrames: 3)
         XCTAssertEqual(controller.state, .idle)
         var scrollCount = 0
-        controller.start(capture: { solid() }, scroll: { scrollCount += 1 })
+        controller.start(capture: { self.solid() }, scroll: { scrollCount += 1 })
         try await Task.sleep(nanoseconds: 120_000_000)
         let result = try controller.finish()
         XCTAssertEqual(controller.state, .stopped)
