@@ -36,7 +36,7 @@ jobs:
 
       - name: Debug 编译
         shell: bash
-        run: cd "$PKG_DIR" && swift build 2>&1 | tee /tmp/snowair-build.log
+        run: cd "$PKG_DIR" && swift build -v 2>&1 | tee /tmp/snowair-build.log
 
       - name: 单元测试
         shell: bash
