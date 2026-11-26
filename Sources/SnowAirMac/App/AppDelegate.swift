@@ -7,7 +7,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var hotkey: HotkeyManager?
-    private var config: AppConfig = .load()
+    private var config: AppConfig = ConfigStore.load()
     private var permissionGranted = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
