@@ -1,12 +1,9 @@
 import AppKit
-import SwiftUI
 
-@main
-struct SnowAirMacApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
-    var body: some Scene {
-        // 菜单栏应用无需窗口 Scene；Settings 由 NSWindowController 自行管理
-        Settings { EmptyView() }
-    }
-}
+// SPM 可执行入口：main.swift 内不能再用 @main（会与顶层代码冲突）。
+// 菜单栏应用无 Dock 图标，由 Info.plist 的 LSUIElement 控制。
+let app = NSApplication.shared
+let delegate = AppDelegate()
+app.delegate = delegate
+app.setActivationPolicy(.accessory)
+app.run()
