@@ -101,7 +101,7 @@ public final class ScreenRecorder: NSObject, SCStreamDelegate, SCStreamOutput {
         self.isRecordingIndicator = true
 
         do {
-            try newStream.startCapture()
+            try await newStream.startCapture()
         } catch {
             cleanup()
             throw RecorderError.setupFailed(error.localizedDescription)
@@ -111,7 +111,7 @@ public final class ScreenRecorder: NSObject, SCStreamDelegate, SCStreamOutput {
     public func stop() async throws {
         guard isRecording, let stream, let writer, let input = videoInput else { return }
         isRecording = false
-        stream.stopCapture()
+        try await stream.stopCapture()
         input.markAsFinished()
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             writer.finishWriting { continuation.resume() }

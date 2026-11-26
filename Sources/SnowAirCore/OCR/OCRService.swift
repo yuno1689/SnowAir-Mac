@@ -54,7 +54,7 @@ public struct OCRService {
         }
 
         let lines = (request.results ?? []).compactMap { observation -> OCRLine? in
-            guard let candidate = observation.topCandidate(1).first else { return nil }
+            guard let candidate = observation.topCandidates(1).first else { return nil }
             return OCRLine(text: candidate.string, confidence: candidate.confidence)
         }
         guard !lines.isEmpty else { throw OCRError.noText }
