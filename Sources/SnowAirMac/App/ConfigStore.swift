@@ -28,6 +28,6 @@ enum ConfigStore {
 
     static func save(_ config: AppConfig) {
         guard let data = try? JSONEncoder().encode(config) else { return }
-        try? data.write(to: currentURL, options: .atomic)
+        try? data.write(to: currentURL, options: Data.WritingOptions.atomic)
     }
 }

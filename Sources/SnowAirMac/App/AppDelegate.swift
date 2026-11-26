@@ -101,7 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let cropped = ScreenCapturer.crop(full: full, rect: rect, scale: scale) else { return }
         let result = CaptureResult(
             image: cropped, rect: rect, scaleFactor: scale,
-            source: .region, createdAt: Date()
+            source: CaptureSource.region, createdAt: Date()
         )
         AnnotationWindowController.show(result: result, config: config)
     }

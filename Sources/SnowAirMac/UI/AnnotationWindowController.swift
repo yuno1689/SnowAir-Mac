@@ -4,13 +4,17 @@ import SwiftUI
 
 /// 标注阶段：无边框窗口承载 SwiftUI 画布 + 悬浮工具栏。
 final class AnnotationWindowController: NSWindowController {
-    private let result: CaptureResult
-    private let config: AppConfig
+    // 用 private designated init(window:) + static make，避开与
+    // required init?(coder:) 的重载歧义（Swift 6 下自定义 init 会被误判）。
+    private init(annotationWindow panel: NSPanel) {
+        super.init(window: panel)
+    }
 
-    init(result: CaptureResult, config: AppConfig) {
-        self.result = result
-        self.config = config
+    required init?(coder: NSCoder) { fatalError("init(coder:) 未实现") }
 
+    private static var active: AnnotationWindowController?
+
+    static func make(result: CaptureResult, config: AppConfig, onFinish: @escaping () -> Void) -> AnnotationWindowController {
         let panel = NSPanel(
             contentRect: NSRect(origin: .zero, size: NSSize(width: result.image.width, height: result.image.height)),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -22,22 +26,19 @@ final class AnnotationWindowController: NSWindowController {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.backgroundColor = .clear
 
-        super.init(window: panel)
-
-        let root = AnnotationView(result: result, config: config, onFinish: { [weak self] in
-            self?.close()
-        })
+        let c = AnnotationWindowController(annotationWindow: panel)
+        let root = AnnotationView(result: result, config: config, onFinish: onFinish)
         panel.contentView = NSHostingView(rootView: root)
         panel.center()
+        return c
     }
 
-    required init?(coder: NSCoder) { fatalError("init(coder:) 未实现") }
-
-    // 强引用保活：窗口关闭时置 nil，避免控制器被释放
-    private static var active: AnnotationWindowController?
-
     static func show(result: CaptureResult, config: AppConfig) {
-        let c = AnnotationWindowController(result: result, config: config)
+        var controller: AnnotationWindowController?
+        let c = make(result: result, config: config, onFinish: { [weak controller] in
+            controller?.close()
+        })
+        controller = c
         active = c
         c.showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
