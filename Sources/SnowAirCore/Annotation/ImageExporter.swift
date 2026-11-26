@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Foundation
 
@@ -13,8 +14,10 @@ enum ImageExporter {
                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
               ) else { return nil }
 
-        // 位图上下文中 draw 整图按左上原点对齐；契约 02 的点坐标同为左上原点，
-        // 因此标注层无需翻转，与底图共用同一坐标系。
+        // bitmap 上下文原点在左下（Core Graphics 默认），契约 02 的点坐标为左上原点。
+        // 先翻转 Y 轴，使 ShapeRenderer 的所有绘制与契约坐标系一致。
+        ctx.translateBy(x: 0, y: CGFloat(h))
+        ctx.scaleBy(x: 1, y: -1)
         ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
 
         ShapeRenderer.render(shapes, in: ctx, sourceImage: image)

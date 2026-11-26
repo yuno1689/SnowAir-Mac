@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import CoreText
 import Foundation
@@ -77,14 +78,18 @@ enum ShapeRenderer {
         ctx.strokePath()
     }
 
+    /// 用 CoreText 绘制文字：支持中文，且不受 CGContext 废弃的 C 字符串 API 限制。
+    /// 当前上下文的几何图形使用左上原点；CoreText 默认左下原点，故翻转 textMatrix。
     private static func drawText(_ s: AnnotationShape, in ctx: CGContext) {
         guard let point = s.points.first, let text = s.text, !text.isEmpty else { return }
         let size = s.fontSize ?? 18
-        let font = CGFont("PingFangSC-Regular" as CFString) ?? CGFont("Helvetica" as CFString)
-        ctx.setFont(font, size: size)
-        ctx.setFillColor(s.style.color.cgColor)
-        ctx.setAllowsAntialiasing(true)
-        ctx.showText(at: point, string: text as CFString)
+        guard let font = CTFontCreateWithName("PingFangSC-Regular" as CFString, size, nil) else { return }
+        let attr: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor(cgColor: s.style.color.cgColor) ?? .white
+        ]
+        let line = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attr))
+        draw(line, at: point, in: ctx)
     }
 
     private static func drawNumber(_ s: AnnotationShape, in ctx: CGContext) {
@@ -97,19 +102,26 @@ enum ShapeRenderer {
         ctx.setFillColor(s.style.color.cgColor)
         ctx.fillEllipse(in: circle)
 
-        let label = "\(n)" as CFString
+        let label = "\(n)"
         let fontSize = radius * 1.2
-        ctx.setFont(CGFont("Helvetica-Bold" as CFString) ?? CGFont("Helvetica" as CFString), size: fontSize)
-        ctx.setFillColor(RGBA.white.cgColor)
-
-        // 用 CTLine 取实际宽度，令数字在圆内水平居中
-        let attr: [CFAttributedStringKey: Any] = [
-            kCTFontAttributeName: CTFontCreateWithName("Helvetica-Bold" as CFString, fontSize, nil)
+        guard let font = CTFontCreateWithName("Helvetica-Bold" as CFString, fontSize, nil) else { return }
+        let attr: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.white
         ]
-        let attrStr = CFAttributedStringCreate(nil, label, attr as CFDictionary)!
-        let line = CTLineCreateWithAttributedString(attrStr)
+        let line = CTLineCreateWithAttributedString(NSAttributedString(string: label, attributes: attr))
         let textW = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds).width
-        ctx.showText(at: CGPoint(x: center.x - textW / 2, y: center.y - fontSize * 0.35), string: label)
+        // CoreText 基线在下方，向下偏移约 0.35 字号使数字视觉居中
+        draw(line, at: CGPoint(x: center.x - textW / 2, y: center.y - fontSize * 0.35), in: ctx)
+    }
+
+    /// CoreText 绘制入口：翻转 textMatrix 以匹配左上原点坐标系。
+    private static func draw(_ line: CTLine, at point: CGPoint, in ctx: CGContext) {
+        ctx.saveGState()
+        ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
+        ctx.textPosition = point
+        CTLineDraw(line, ctx)
+        ctx.restoreGState()
     }
 
     /// 马赛克：从原始位图按区域取样 → 缩到极小 → 最近邻放大，真实像素化。
