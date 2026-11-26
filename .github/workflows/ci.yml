@@ -34,9 +34,13 @@ jobs:
         shell: bash
         run: cd "$PKG_DIR" && swift --version
 
-      - name: 核心库单独编译（隔离诊断）
+      - name: 核心库单独编译
         shell: bash
         run: cd "$PKG_DIR" && swift build --target SnowAirCore 2>&1 | tee /tmp/snowair-core.log
+
+      - name: App 层单独编译（隔离诊断）
+        shell: bash
+        run: cd "$PKG_DIR" && swift build --target SnowAirMac 2>&1 | tee /tmp/snowair-app.log
 
       - name: Debug 编译
         shell: bash
@@ -57,6 +61,7 @@ jobs:
           name: snowair-ci-logs
           path: |
             /tmp/snowair-core.log
+            /tmp/snowair-app.log
             /tmp/snowair-build.log
             /tmp/snowair-test.log
             /tmp/snowair-release.log
