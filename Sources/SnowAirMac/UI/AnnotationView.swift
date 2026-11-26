@@ -10,7 +10,7 @@ struct AnnotationView: View {
     @State private var shapes: [AnnotationShape] = []
     @State private var draft: AnnotationShape?
     @State private var currentTool: ShapeKind = .rectangle
-    @State private var style: StrokeStyle = .default
+    @State private var style: SnowAirCore.StrokeStyle = .default
     @State private var undo = UndoStack<[AnnotationShape]>()
     @State private var showTextInput = false
     @State private var pendingText = ""
@@ -20,7 +20,7 @@ struct AnnotationView: View {
         self.config = config
         self.onFinish = onFinish
         // 用 State(wrappedValue:) 显式构造，规避 Swift 6 对 _style 直接赋值的推断问题
-        self.style = StrokeStyle(color: config.strokeColor, width: config.strokeWidth)
+        self.style = SnowAirCore.StrokeStyle(color: config.strokeColor, width: config.strokeWidth)
         self.currentTool = config.defaultTool
     }
 
@@ -38,7 +38,7 @@ struct AnnotationView: View {
 
             ToolbarView(tool: $currentTool, style: $style)
                 .padding(8)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                .background(Material.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 .padding(.top, 12)
         }
         .overlay(alignment: .bottom) {
@@ -52,7 +52,7 @@ struct AnnotationView: View {
                     .keyboardShortcut(.escape, modifiers: [])
             }
             .padding(10)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .background(Material.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
             .padding(.bottom, 16)
         }
         .sheet(isPresented: $showTextInput) {

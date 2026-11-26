@@ -3,7 +3,7 @@ import SwiftUI
 
 struct ToolbarView: View {
     @Binding var tool: ShapeKind
-    @Binding var style: StrokeStyle
+    @Binding var style: SnowAirCore.StrokeStyle
 
     private let columns = Array(ShapeKind.allCases)
 

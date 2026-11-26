@@ -67,7 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             do {
                 let full = try await ScreenCapturer.captureDisplay()
-                RegionSelector.show(fullImage: full) { [weak self] rect in
+                RegionSelectorWindow.show(fullImage: full) { [weak self] rect in
                     guard let rect else { return }
                     self?.openAnnotation(full: full, rect: rect)
                 }

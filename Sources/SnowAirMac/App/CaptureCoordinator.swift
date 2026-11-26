@@ -8,7 +8,7 @@ enum CaptureCoordinator {
         let image = compositedImage ?? ImageExporter.composite(image: result.image, shapes: shapes)
         guard let image, let data = ImageExporter.pngData(image) else { return }
 
-        let config = AppConfig.load()
+        let config = ConfigStore.load()
         if config.copyToClipboard {
             let pb = NSPasteboard.general
             pb.clearContents()
