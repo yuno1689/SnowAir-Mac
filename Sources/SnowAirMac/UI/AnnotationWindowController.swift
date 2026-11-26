@@ -14,7 +14,7 @@ final class AnnotationWindowController: NSWindowController {
 
     private static var active: AnnotationWindowController?
 
-    static func make(result: CaptureResult, config: AppConfig, onFinish: @escaping () -> Void) -> AnnotationWindowController {
+    static func make(result: CaptureResult, config: AppConfig, initialShapes: [AnnotationShape] = [], onFinish: @escaping () -> Void) -> AnnotationWindowController {
         let panel = NSPanel(
             contentRect: NSRect(origin: .zero, size: NSSize(width: result.image.width, height: result.image.height)),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -27,15 +27,15 @@ final class AnnotationWindowController: NSWindowController {
         panel.backgroundColor = NSColor.clear
 
         let c = AnnotationWindowController(annotationWindow: panel)
-        let root = AnnotationView(result: result, config: config, onFinish: onFinish)
+        let root = AnnotationView(result: result, config: config, initialShapes: initialShapes, onFinish: onFinish)
         panel.contentView = NSHostingView(rootView: root)
         panel.center()
         return c
     }
 
-    static func show(result: CaptureResult, config: AppConfig) {
+    static func show(result: CaptureResult, config: AppConfig, initialShapes: [AnnotationShape] = []) {
         var controller: AnnotationWindowController?
-        let c = make(result: result, config: config, onFinish: { [weak controller] in
+        let c = make(result: result, config: config, initialShapes: initialShapes, onFinish: { [weak controller] in
             controller?.close()
         })
         controller = c

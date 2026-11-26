@@ -14,6 +14,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 纯菜单栏应用：不显示 Dock 图标、不弹主窗口
         NSApp.setActivationPolicy(.accessory)
 
+        // 自动化 UI 截图模式：self-hosted runner 设 SNOWAIR_UI_DEMO=annotation 后启动，
+        // 直接打开带示例标注的标注窗口，跳过权限检查（合成图不需要屏幕录制权限）。
+        if ProcessInfo.processInfo.environment["SNOWAIR_UI_DEMO"] == "annotation" {
+            buildMenuBar()
+            showDemoAnnotation()
+            return
+        }
+
         Task { @MainActor in
             permissionGranted = await PermissionChecker.hasScreenRecordingPermission()
             if !permissionGranted { PermissionChecker.openScreenRecordingSettings() }
@@ -22,6 +30,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         buildMenuBar()
         installHotkey()
         HotkeyManager.setActive(hotkey)
+    }
+
+    private func showDemoAnnotation() {
+        guard let result = DemoSupport.demoResult() else { return }
+        AnnotationWindowController.show(
+            result: result,
+            config: config,
+            initialShapes: DemoSupport.demoShapes()
+        )
     }
 
     private func buildMenuBar() {

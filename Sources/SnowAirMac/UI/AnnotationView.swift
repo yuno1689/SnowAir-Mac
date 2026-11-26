@@ -15,13 +15,18 @@ struct AnnotationView: View {
     @State private var showTextInput = false
     @State private var pendingText = ""
 
-    init(result: CaptureResult, config: AppConfig, onFinish: @escaping () -> Void) {
+    init(result: CaptureResult, config: AppConfig, initialShapes: [AnnotationShape] = [], onFinish: @escaping () -> Void) {
         self.result = result
         self.config = config
         self.onFinish = onFinish
         // 用 State(wrappedValue:) 显式构造，规避 Swift 6 对 _style 直接赋值的推断问题
         self.style = SnowAirCore.StrokeStyle(color: config.strokeColor, width: config.strokeWidth)
         self.currentTool = config.defaultTool
+        // 演示模式：注入示例图形；正常模式默认为空，行为不变
+        self._shapes = State(initialValue: initialShapes)
+        self._undo = State(initialValue: {
+            var s = UndoStack<[AnnotationShape]>(); s.reset(initialShapes); return s
+        }())
     }
 
     var body: some View {
@@ -58,7 +63,7 @@ struct AnnotationView: View {
         .sheet(isPresented: $showTextInput) {
             textInputSheet
         }
-        .onAppear { undo.reset([]) }
+        .onAppear { undo.reset(shapes) }
     }
 
     // MARK: - 交互

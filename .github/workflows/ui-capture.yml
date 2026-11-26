@@ -1,0 +1,50 @@
+name: SnowAirMac UI Capture
+
+# 真机 GUI 截图流水线。
+# 必须跑在用户自己 Mac 上的 self-hosted runner（GUI 会话 + 屏幕录制权限），
+# 云端 GitHub runner 无交互桌面，无法截到真实 App 界面。
+# 触发：仅手动，避免占用日常 CI 资源。
+on:
+  workflow_dispatch:
+
+jobs:
+  capture:
+    # 标签取自 self-hosted runner 注册时的默认标签：self-hosted / macos / arm64 或 x64
+    runs-on: [self-hosted, macos]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 工具链版本
+        shell: bash
+        run: swift --version
+
+      - name: 检查 GUI 会话与屏幕录制权限
+        shell: bash
+        run: |
+          echo "Session type: $(launchctl print gui/$(id -u) >/dev/null 2>&1 && echo GUI || echo NON-GUI)"
+          echo "Runner user: $(whoami)"
+          echo "Display test:"
+          screencapture -x -t png /tmp/_sa_perm_check.png && \
+            echo "screencapture OK, size=$(stat -f%z /tmp/_sa_perm_check.png)" || \
+            echo "::error::screencapture 失败，请给 runner 授予屏幕录制权限"
+          rm -f /tmp/_sa_perm_check.png
+
+      - name: 启动 App 并截取真实界面
+        shell: bash
+        run: |
+          chmod +x scripts/capture-ui.sh
+          ./scripts/capture-ui.sh "$RUNNER_TEMP/snowair-ui-shots"
+
+      - name: 上传截图（artifact）
+        uses: actions/upload-artifact@v4
+        with:
+          name: snowair-ui-shots
+          path: ${{ runner.temp }}/snowair-ui-shots/*.png
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: 始终清理演示进程
+        if: always()
+        shell: bash
+        run: pkill -f 'SnowAirMac' || true
