@@ -53,7 +53,7 @@ swift build -c release
 swift package generate-xcodeproj   # 若已移除该命令，直接用 Xcode 打开 Package.swift
 ```
 
-> 编译状态（2026-11-26）：云 Mac CI 全绿 —— Debug 编译 / 单元测试 11/11 / Release 编译 全部通过（含真实 Vision OCR 识别）。
+> 编译状态（2026-11-26）：云 Mac CI 全绿 —— Debug 编译 / 单元测试 14/14 / Release 编译 全部通过（含真实 Vision OCR 识别、GIF 编码、长截图控制器）。
 > 仓库：https://github.com/yuno1689/SnowAir-Mac
 
 > 注意：SPM 构建的可执行文件需要 `Info.plist`（已在 `Sources/SnowAirMac/Info.plist`）。
@@ -98,10 +98,11 @@ Tests/SnowAirCoreTests/        契约、渲染、OCR、长截图拼接测试（1
 
 ## 已知降级/未完成
 
-- 长截图自动滚动：当前提供拼接核心 + 手动抓帧兜底，自动滚动触发策略待真机打磨
-- 录屏仅视频（无系统音频）、仅 MP4（GIF 编码风险 R5 暂不做）
-- 改键 UI（设置里显示默认值，暂不可改）
-- 截图历史、AI、翻译、演示画布（P2）
+- 长截图自动滚动已接入 UI（菜单栏「长截图」/「停止长截图」），但滚动事件依赖辅助功能权限，需真机调参
+- GIF 导出：菜单栏「导出上次录屏为 GIF」，基于 ImageIO 原生实现（规划阶段 R5 判断已推翻）
+- 录屏已含系统音频（AAC，失败时降级为纯视频）
+- 改键 UI：设置页「录制热键」，写入配置并即时生效，含常见系统快捷键冲突提示
+- 截图历史、AI、翻译、演示画布（P2，规划外）
 
 ## 许可
 
