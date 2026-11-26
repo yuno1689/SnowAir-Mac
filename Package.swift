@@ -5,6 +5,7 @@ let package = Package(
     name: "SnowAirMac",
     platforms: [.macOS(.v14)],
     products: [
+        .library(name: "SnowAirCore", targets: ["SnowAirCore"]),
         .executable(name: "SnowAirMac", targets: ["SnowAirMac"])
     ],
     targets: [

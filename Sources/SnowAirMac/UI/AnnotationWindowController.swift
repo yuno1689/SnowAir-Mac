@@ -22,9 +22,9 @@ final class AnnotationWindowController: NSWindowController {
         )
         panel.isOpaque = false
         panel.hasShadow = true
-        panel.level = .screenSaver
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.backgroundColor = .clear
+        panel.level = NSWindow.Level.screenSaver
+        panel.collectionBehavior = [NSWindow.CollectionBehavior.canJoinAllSpaces, NSWindow.CollectionBehavior.fullScreenAuxiliary]
+        panel.backgroundColor = NSColor.clear
 
         let c = AnnotationWindowController(annotationWindow: panel)
         let root = AnnotationView(result: result, config: config, onFinish: onFinish)
@@ -40,7 +40,7 @@ final class AnnotationWindowController: NSWindowController {
         })
         controller = c
         active = c
-        c.showWindow(nil)
+        c.showWindow(NSApp)
         NSApp.activate(ignoringOtherApps: true)
     }
 

@@ -30,7 +30,7 @@ final class SettingsWindowController: NSWindowController {
     static func show(config: AppConfig) {
         let c = make(config: config)
         active = c
-        c.showWindow(nil)
+        c.showWindow(NSApp)
         NSApp.activate(ignoringOtherApps: true)
     }
 
