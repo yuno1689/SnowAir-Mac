@@ -10,7 +10,7 @@ struct AnnotationView: View {
     @State private var shapes: [AnnotationShape] = []
     @State private var draft: AnnotationShape?
     @State private var currentTool: ShapeKind = .rectangle
-    @State private var style: StrokeStyle
+    @State private var style: StrokeStyle = .default
     @State private var undo = UndoStack<[AnnotationShape]>()
     @State private var showTextInput = false
     @State private var pendingText = ""
@@ -19,9 +19,9 @@ struct AnnotationView: View {
         self.result = result
         self.config = config
         self.onFinish = onFinish
-        _style = State(initialValue: StrokeStyle(color: config.strokeColor, width: config.strokeWidth))
-        _currentTool = State(initialValue: config.defaultTool)
-        _undo = State(initialValue: UndoStack<[AnnotationShape]>())
+        // 用 State(wrappedValue:) 显式构造，规避 Swift 6 对 _style 直接赋值的推断问题
+        self.style = StrokeStyle(color: config.strokeColor, width: config.strokeWidth)
+        self.currentTool = config.defaultTool
     }
 
     var body: some View {
@@ -69,11 +69,11 @@ struct AnnotationView: View {
         case .text:
             // 记录插入点但暂不生成 draft，等文本提交时一次性构造
             pendingText = ""
-            draft = AnnotationShape(kind: .text, points: [p], style: style, text: nil)
+            draft = AnnotationShape(kind: ShapeKind.text, points: [p], style: style, text: nil)
             showTextInput = true
         case .number:
             let n = (shapes.compactMap { $0.number }.max() ?? 0) + 1
-            let s = AnnotationShape(kind: .number, points: [p], style: style, number: n)
+            let s = AnnotationShape(kind: ShapeKind.number, points: [p], style: style, number: n)
             draft = s
         default:
             draft = AnnotationShape(kind: currentTool, points: [p, p], style: style)
@@ -82,7 +82,7 @@ struct AnnotationView: View {
 
     private func updatedDraft(at p: CGPoint) -> AnnotationShape? {
         guard var d = draft, !d.points.isEmpty else { return nil }
-        if currentTool == .pen {
+        if currentTool == ShapeKind.pen {
             d.points.append(p)
         } else {
             // 两点工具：索引 1 恒存在（startShape 以 [p, p] 初始化）
@@ -109,7 +109,7 @@ struct AnnotationView: View {
     private func commitText(_ text: String, at point: CGPoint) {
         guard !text.isEmpty else { return }
         let s = AnnotationShape(
-            kind: .text, points: [point], style: style,
+            kind: ShapeKind.text, points: [point], style: style,
             text: text, fontSize: 18
         )
         record(shapes + [s])

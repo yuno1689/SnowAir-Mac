@@ -20,10 +20,9 @@ enum ConfigStore {
     static var currentURL: URL { portableURL ?? defaultURL }
 
     static func load() -> AppConfig {
-        guard let data = try? Data(contentsOf: currentURL),
-              let config = try? JSONDecoder().decode(AppConfig.self, from: data)
-        else { return .default }
-        return config
+        guard let data = try? Data(contentsOf: currentURL) else { return AppConfig.default }
+        let decoded = try? JSONDecoder().decode(AppConfig.self, from: data)
+        return decoded ?? AppConfig.default
     }
 
     static func save(_ config: AppConfig) {

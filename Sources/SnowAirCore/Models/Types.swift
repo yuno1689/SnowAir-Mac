@@ -3,24 +3,32 @@ import CoreGraphics
 
 // MARK: - 契约 01 · CaptureResult
 
-enum CaptureSource: String, Codable {
+public enum CaptureSource: String, Codable, Sendable {
     case region, fullScreen, longShot, recording
 }
 
-struct CaptureResult {
-    var image: CGImage
-    var rect: CGRect
-    var scaleFactor: CGFloat
-    var source: CaptureSource
-    var createdAt: Date
+public struct CaptureResult {
+    public var image: CGImage
+    public var rect: CGRect
+    public var scaleFactor: CGFloat
+    public var source: CaptureSource
+    public var createdAt: Date
+
+    public init(image: CGImage, rect: CGRect, scaleFactor: CGFloat, source: CaptureSource, createdAt: Date) {
+        self.image = image
+        self.rect = rect
+        self.scaleFactor = scaleFactor
+        self.source = source
+        self.createdAt = createdAt
+    }
 }
 
 // MARK: - 契约 02 · AnnotationShape
 
-enum ShapeKind: String, Codable, CaseIterable {
+public enum ShapeKind: String, Codable, Sendable, CaseIterable {
     case rectangle, ellipse, arrow, pen, text, number, mosaic
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .rectangle: return "矩形"
         case .ellipse:   return "椭圆"
@@ -33,37 +41,46 @@ enum ShapeKind: String, Codable, CaseIterable {
     }
 }
 
-struct RGBA: Codable, Equatable {
-    var r: Double, g: Double, b: Double, a: Double
+public struct RGBA: Codable, Sendable, Equatable {
+    public var r: Double, g: Double, b: Double, a: Double
 
-    static let red    = RGBA(r: 1, g: 0.23, b: 0.23, a: 1)
-    static let yellow = RGBA(r: 1, g: 0.82, b: 0.20, a: 1)
-    static let green  = RGBA(r: 0.20, g: 0.78, b: 0.36, a: 1)
-    static let blue   = RGBA(r: 0.20, g: 0.52, b: 0.98, a: 1)
-    static let white  = RGBA(r: 1, g: 1, b: 1, a: 1)
+    public static let red    = RGBA(r: 1, g: 0.23, b: 0.23, a: 1)
+    public static let yellow = RGBA(r: 1, g: 0.82, b: 0.20, a: 1)
+    public static let green  = RGBA(r: 0.20, g: 0.78, b: 0.36, a: 1)
+    public static let blue   = RGBA(r: 0.20, g: 0.52, b: 0.98, a: 1)
+    public static let white  = RGBA(r: 1, g: 1, b: 1, a: 1)
 
-    var cgColor: CGColor {
+    public init(r: Double, g: Double, b: Double, a: Double) {
+        self.r = r; self.g = g; self.b = b; self.a = a
+    }
+
+    public var cgColor: CGColor {
         CGColor(red: r, green: g, blue: b, alpha: a)
     }
 }
 
-struct StrokeStyle: Codable {
-    var color: RGBA
-    var width: CGFloat
+public struct StrokeStyle: Codable, Sendable {
+    public var color: RGBA
+    public var width: CGFloat
 
-    static let `default` = StrokeStyle(color: .red, width: 3)
+    public static let `default` = StrokeStyle(color: .red, width: 3)
+
+    public init(color: RGBA, width: CGFloat) {
+        self.color = color
+        self.width = width
+    }
 }
 
-struct AnnotationShape: Identifiable, Codable {
-    let id: UUID
-    var kind: ShapeKind
-    var points: [CGPoint]
-    var style: StrokeStyle
-    var text: String?
-    var fontSize: CGFloat?
-    var number: Int?
+public struct AnnotationShape: Identifiable, Codable, Sendable {
+    public let id: UUID
+    public var kind: ShapeKind
+    public var points: [CGPoint]
+    public var style: StrokeStyle
+    public var text: String?
+    public var fontSize: CGFloat?
+    public var number: Int?
 
-    init(
+    public init(
         id: UUID = UUID(),
         kind: ShapeKind,
         points: [CGPoint],
@@ -82,7 +99,7 @@ struct AnnotationShape: Identifiable, Codable {
     }
 
     /// 契约 02 的不变量校验：渲染层遇到无效图形跳过
-    var isValid: Bool {
+    public var isValid: Bool {
         switch kind {
         case .rectangle, .ellipse, .arrow, .mosaic: return points.count == 2
         case .pen:                                   return points.count >= 2
@@ -90,7 +107,7 @@ struct AnnotationShape: Identifiable, Codable {
         }
     }
 
-    var boundingBox: CGRect? {
+    public var boundingBox: CGRect? {
         guard !points.isEmpty else { return nil }
         let xs = points.map(\.x), ys = points.map(\.y)
         guard let minX = xs.min(), let maxX = xs.max(),
@@ -101,39 +118,40 @@ struct AnnotationShape: Identifiable, Codable {
 
 // MARK: - 契约 03 · AppConfig
 
-enum TrayAction: String, Codable {
+public enum TrayAction: String, Codable, Sendable {
     case capture, openSettings, none
 }
 
-struct HotkeyBinding: Codable {
-    var keyCode: UInt32
-    var modifiers: UInt32
-    var display: String
+public struct HotkeyBinding: Codable, Sendable {
+    public var keyCode: UInt32
+    public var modifiers: UInt32
+    public var display: String
 
-    static let `default` = HotkeyBinding(keyCode: 1, modifiers: 0, display: "⌥S")
+    public static let `default` = HotkeyBinding(keyCode: 1, modifiers: 0, display: "⌥S")
+
+    public init(keyCode: UInt32, modifiers: UInt32, display: String) {
+        self.keyCode = keyCode
+        self.modifiers = modifiers
+        self.display = display
+    }
 }
 
-struct AppConfig: Codable {
-    var schemaVersion: Int = 1
-    var hotkey: HotkeyBinding = .default
-    var trayClickAction: TrayAction = .capture
-    var defaultTool: ShapeKind = .rectangle
-    var strokeColor: RGBA = .red
-    var strokeWidth: CGFloat = 3
-    var outputDirectory: String? = nil
-    var copyToClipboard: Bool = true
-    var language: String = "zh-Hans"
+public struct AppConfig: Codable, Sendable {
+    public var schemaVersion: Int = 1
+    public var hotkey: HotkeyBinding = .default
+    public var trayClickAction: TrayAction = .capture
+    public var defaultTool: ShapeKind = .rectangle
+    public var strokeColor: RGBA = .red
+    public var strokeWidth: CGFloat = 3
+    public var outputDirectory: String? = nil
+    public var copyToClipboard: Bool = true
+    public var language: String = "zh-Hans"
 
-    static let `default` = AppConfig()
+    public static let `default` = AppConfig()
 
-    enum CodingKeys: String, CodingKey {
-        case schemaVersion, hotkey, trayClickAction, defaultTool
-        case strokeColor, strokeWidth, outputDirectory, copyToClipboard, language
-    }
+    public init() {}
 
-    init() {}
-
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         schemaVersion = try c.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
         hotkey = try c.decodeIfPresent(HotkeyBinding.self, forKey: .hotkey) ?? .default
@@ -145,5 +163,10 @@ struct AppConfig: Codable {
         copyToClipboard = try c.decodeIfPresent(Bool.self, forKey: .copyToClipboard) ?? true
         let lang = try c.decodeIfPresent(String.self, forKey: .language) ?? "zh-Hans"
         language = (lang == "en") ? "en" : "zh-Hans"
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, hotkey, trayClickAction, defaultTool
+        case strokeColor, strokeWidth, outputDirectory, copyToClipboard, language
     }
 }

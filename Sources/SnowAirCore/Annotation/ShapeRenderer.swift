@@ -5,10 +5,10 @@ import Foundation
 
 /// 7 种标注图形的统一渲染器。
 /// 坐标系：输入点均为图像像素坐标（左上原点），与契约 02 一致。
-enum ShapeRenderer {
+public enum ShapeRenderer {
 
     /// - Parameter sourceImage: 原始位图，仅马赛克取样需要；画布预览可传 nil（此时跳过马赛克）
-    static func render(_ shapes: [AnnotationShape], in context: CGContext, sourceImage: CGImage? = nil) {
+    public static func render(_ shapes: [AnnotationShape], in context: CGContext, sourceImage: CGImage? = nil) {
         for shape in shapes where shape.isValid {
             switch shape.kind {
             case .rectangle: drawRectangle(shape, in: context)

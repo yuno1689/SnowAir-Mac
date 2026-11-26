@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 import ScreenCaptureKit
 
-enum CaptureError: Error, LocalizedError {
+public enum CaptureError: Error, LocalizedError {
     case noDisplay
     case permissionDenied
     case captureFailed(String)
@@ -19,10 +19,10 @@ enum CaptureError: Error, LocalizedError {
 /// 屏幕截图封装。基于 ScreenCaptureKit 的 SCScreenshotManager（macOS 14.0+）。
 /// 注意：captureImage 使用 SCStreamConfiguration 参数——SCScreenshotConfiguration 是 macOS 26+ 才有的，
 /// 目标 macOS 14 不能用。这是核实 Apple 文档后的选型，不要改成 26+ 的新 API。
-struct ScreenCapturer {
+public struct ScreenCapturer {
 
     /// 截取指定显示器，返回物理像素 CGImage。
-    static func captureDisplay(_ display: SCDisplay? = nil) async throws -> CGImage {
+    public static func captureDisplay(_ display: SCDisplay? = nil) async throws -> CGImage {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         guard let target = display ?? content.displays.first else { throw CaptureError.noDisplay }
 
@@ -49,7 +49,7 @@ struct ScreenCapturer {
     ///   - full: 整屏物理像素图
     ///   - rect: Cocoa 点坐标选区（左下原点）
     ///   - scale: 像素/点比例
-    static func crop(full: CGImage, rect: CGRect, scale: CGFloat) -> CGImage? {
+    public static func crop(full: CGImage, rect: CGRect, scale: CGFloat) -> CGImage? {
         // CGImage 坐标系左上原点，Cocoa 点坐标左下原点，需翻转 Y
         let h = CGFloat(full.height)
         let px = CGRect(

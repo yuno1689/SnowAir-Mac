@@ -59,7 +59,9 @@ struct SettingsView: View {
             Toggle("截图后复制到剪贴板", isOn: $config.copyToClipboard)
 
             Picker("默认工具", selection: $config.defaultTool) {
-                ForEach(ShapeKind.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                ForEach(ShapeKind.allCases, id: \.self) { kind in
+                    Text(kind.displayName).tag(kind)
+                }
             }
 
             HStack {

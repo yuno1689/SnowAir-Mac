@@ -2,10 +2,10 @@ import AppKit
 import CoreGraphics
 import Foundation
 
-enum ImageExporter {
+public enum ImageExporter {
 
     /// 将标注叠加到原始截图，输出最终 PNG 位图。
-    static func composite(image: CGImage, shapes: [AnnotationShape]) -> CGImage? {
+    public static func composite(image: CGImage, shapes: [AnnotationShape]) -> CGImage? {
         let w = image.width, h = image.height
         guard let space = CGColorSpace(name: CGColorSpace.sRGB),
               let ctx = CGContext(
@@ -24,7 +24,7 @@ enum ImageExporter {
         return ctx.makeImage()
     }
 
-    static func pngData(_ image: CGImage) -> Data? {
+    public static func pngData(_ image: CGImage) -> Data? {
         let bitmap = NSBitmapImageRep(cgImage: image)
         return bitmap.representation(using: .png, properties: [:])
     }
