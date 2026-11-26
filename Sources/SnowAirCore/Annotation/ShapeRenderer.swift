@@ -83,7 +83,7 @@ enum ShapeRenderer {
     private static func drawText(_ s: AnnotationShape, in ctx: CGContext) {
         guard let point = s.points.first, let text = s.text, !text.isEmpty else { return }
         let size = s.fontSize ?? 18
-        guard let font = CTFontCreateWithName("PingFangSC-Regular" as CFString, size, nil) else { return }
+        let font = CTFontCreateWithName("PingFangSC-Regular" as CFString, size, nil)
         let attr: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: NSColor(cgColor: s.style.color.cgColor) ?? .white
@@ -104,7 +104,7 @@ enum ShapeRenderer {
 
         let label = "\(n)"
         let fontSize = radius * 1.2
-        guard let font = CTFontCreateWithName("Helvetica-Bold" as CFString, fontSize, nil) else { return }
+        let font = CTFontCreateWithName("Helvetica-Bold" as CFString, fontSize, nil)
         let attr: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: NSColor.white
