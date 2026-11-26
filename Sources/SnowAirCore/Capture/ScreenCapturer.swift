@@ -7,7 +7,7 @@ public enum CaptureError: Error, LocalizedError {
     case permissionDenied
     case captureFailed(String)
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .noDisplay:            return "未找到可截图的显示器"
         case .permissionDenied:     return "缺少屏幕录制权限，请在系统设置中授权后重启应用"
