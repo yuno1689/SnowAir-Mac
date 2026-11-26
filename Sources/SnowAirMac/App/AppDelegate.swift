@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkey: HotkeyManager?
     private var config: AppConfig = ConfigStore.load()
     private var permissionGranted = false
+    private var recordMenuItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 纯菜单栏应用：不显示 Dock 图标、不弹主窗口
@@ -50,6 +51,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.addItem(withTitle: "截图", action: #selector(startCapture), keyEquivalent: "").target = self
         menu.addItem(withTitle: "截取全屏", action: #selector(captureFullScreen), keyEquivalent: "").target = self
+        let record = menu.addItem(withTitle: "录屏", action: #selector(toggleRecord), keyEquivalent: "")
+        record.target = self
+        recordMenuItem = record
         menu.addItem(NSMenuItem.separator())
         menu.addItem(withTitle: "设置…", action: #selector(openSettings), keyEquivalent: ",").target = self
         menu.addItem(NSMenuItem.separator())
@@ -121,6 +125,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             source: CaptureSource.region, createdAt: Date()
         )
         AnnotationWindowController.show(result: result, config: config)
+    }
+
+    @objc private func toggleRecord() {
+        RecorderCoordinator.toggle(statusItem: recordMenuItem)
     }
 
     @objc private func openSettings() {

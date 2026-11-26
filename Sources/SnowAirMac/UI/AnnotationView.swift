@@ -14,6 +14,10 @@ struct AnnotationView: View {
     @State private var undo = UndoStack<[AnnotationShape]>()
     @State private var showTextInput = false
     @State private var pendingText = ""
+    @State private var ocrText = ""
+    @State private var showOCR = false
+    @State private var ocrBusy = false
+    @State private var ocrMessage = ""
 
     init(result: CaptureResult, config: AppConfig, initialShapes: [AnnotationShape] = [], onFinish: @escaping () -> Void) {
         self.result = result
@@ -51,6 +55,9 @@ struct AnnotationView: View {
                 Button("撤销") { if let s = undo.undo() { shapes = s } }
                     .disabled(!undo.canUndo)
                 Button("清空") { record([]); shapes = [] }
+                Button(ocrBusy ? "识别中…" : "OCR") { runOCR() }
+                    .disabled(ocrBusy)
+                Button("贴图") { pinToDesktop() }
                 Button("完成") { finish() }
                     .keyboardShortcut(.return, modifiers: [])
                 Button("取消") { onFinish() }
@@ -62,6 +69,9 @@ struct AnnotationView: View {
         }
         .sheet(isPresented: $showTextInput) {
             textInputSheet
+        }
+        .sheet(isPresented: $showOCR) {
+            ocrResultSheet
         }
         .onAppear { undo.reset(shapes) }
     }
@@ -128,6 +138,57 @@ struct AnnotationView: View {
     private func finish() {
         guard let final = ImageExporter.composite(image: result.image, shapes: shapes) else { return }
         CaptureCoordinator.export(result, shapes: shapes, compositedImage: final)
+        onFinish()
+    }
+
+    // MARK: - P1-01 OCR
+
+    private func runOCR() {
+        ocrBusy = true
+        ocrMessage = ""
+        Task { @MainActor in
+            defer { ocrBusy = false }
+            do {
+                // 对原始截图识别（不含标注覆盖），保证文字区域不被划线干扰
+                let lines = try await OCRService.recognize(image: result.image)
+                ocrText = OCRService.joinedText(lines)
+                showOCR = true
+            } catch {
+                ocrMessage = error.localizedDescription
+                showOCR = true
+            }
+        }
+    }
+
+    private var ocrResultSheet: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("OCR 识别结果").font(.headline)
+            if !ocrMessage.isEmpty {
+                Text(ocrMessage).foregroundStyle(.secondary)
+            } else {
+                ScrollView {
+                    Text(ocrText.isEmpty ? "（无文字）" : ocrText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                }
+                .frame(width: 420, height: 220)
+                Button("复制到剪贴板") {
+                    let pb = NSPasteboard.general
+                    pb.clearContents()
+                    pb.setString(ocrText, forType: .string)
+                }
+            }
+            HStack { Spacer(); Button("关闭") { showOCR = false } }
+        }
+        .padding(20)
+        .frame(width: 460)
+    }
+
+    // MARK: - P1-03 贴图
+
+    private func pinToDesktop() {
+        guard let final = ImageExporter.composite(image: result.image, shapes: shapes) else { return }
+        PinnedImageController.show(image: final)
         onFinish()
     }
 
