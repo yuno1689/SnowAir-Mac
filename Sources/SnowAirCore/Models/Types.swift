@@ -3,7 +3,7 @@ import CoreGraphics
 
 // MARK: - 契约 01 · CaptureResult
 
-enum CaptureSource: String, Codable, Sendable {
+enum CaptureSource: String, Codable {
     case region, fullScreen, longShot, recording
 }
 
@@ -17,7 +17,7 @@ struct CaptureResult {
 
 // MARK: - 契约 02 · AnnotationShape
 
-enum ShapeKind: String, Codable, Sendable, CaseIterable {
+enum ShapeKind: String, Codable, CaseIterable {
     case rectangle, ellipse, arrow, pen, text, number, mosaic
 
     var displayName: String {
@@ -33,7 +33,7 @@ enum ShapeKind: String, Codable, Sendable, CaseIterable {
     }
 }
 
-struct RGBA: Codable, Sendable, Equatable {
+struct RGBA: Codable, Equatable {
     var r: Double, g: Double, b: Double, a: Double
 
     static let red    = RGBA(r: 1, g: 0.23, b: 0.23, a: 1)
@@ -101,7 +101,7 @@ struct AnnotationShape: Identifiable, Codable {
 
 // MARK: - 契约 03 · AppConfig
 
-enum TrayAction: String, Codable, Sendable {
+enum TrayAction: String, Codable {
     case capture, openSettings, none
 }
 
