@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-test:
-    # macos-15 = Apple Silicon M1 / Xcode 16.x / Swift 5.10+
+    # macos-15 = Apple Silicon M1 / Xcode 16.4 / Swift 6.1
     # 目标部署版本由 Package.swift 的 .macOS(.v14) 锁定，不随 runner 变化
     runs-on: macos-15
     timeout-minutes: 15
@@ -34,14 +34,6 @@ jobs:
         shell: bash
         run: cd "$PKG_DIR" && swift --version
 
-      - name: 核心库单独编译
-        shell: bash
-        run: cd "$PKG_DIR" && swift build --target SnowAirCore 2>&1 | tee /tmp/snowair-core.log
-
-      - name: App 层单独编译（隔离诊断）
-        shell: bash
-        run: cd "$PKG_DIR" && swift build --target SnowAirMac 2>&1 | tee /tmp/snowair-app.log
-
       - name: Debug 编译
         shell: bash
         run: cd "$PKG_DIR" && swift build 2>&1 | tee /tmp/snowair-build.log
@@ -60,8 +52,6 @@ jobs:
         with:
           name: snowair-ci-logs
           path: |
-            /tmp/snowair-core.log
-            /tmp/snowair-app.log
             /tmp/snowair-build.log
             /tmp/snowair-test.log
             /tmp/snowair-release.log
