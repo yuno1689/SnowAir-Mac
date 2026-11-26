@@ -45,6 +45,9 @@ swift build -c release
 swift package generate-xcodeproj   # 若已移除该命令，直接用 Xcode 打开 Package.swift
 ```
 
+> 编译状态（2026-11-26）：云 Mac CI 全绿 —— Debug 编译 / 单元测试 6/6 / Release 编译 全部通过。
+> 仓库：https://github.com/yuno1689/SnowAir-Mac
+
 > 注意：SPM 构建的可执行文件需要 `Info.plist`（已在 `Sources/SnowAirMac/Info.plist`）。
 > 打包成 `.app` 时请将 plist 拷入 bundle 的 `Contents/Info.plist`，并做代码签名：
 > `codesign --force --deep --sign - SnowAir.app`（ad-hoc，首次右键打开）。
