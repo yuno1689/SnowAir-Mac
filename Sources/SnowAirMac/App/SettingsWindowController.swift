@@ -43,6 +43,7 @@ final class SettingsWindowController: NSWindowController {
 struct SettingsView: View {
     @State private var config: AppConfig
     @State private var saved = false
+    @StateObject private var capture = HotkeyCapture()
 
     init(config: AppConfig) { _config = State(initialValue: config) }
 
@@ -65,10 +66,15 @@ struct SettingsView: View {
             }
 
             HStack {
-                Text("热键：\(config.hotkey.display)")
+                Text("截图热键：\(config.hotkey.display)")
                 Spacer()
-                Text("默认 ⌥S，改键功能 P1 提供")
-                    .font(.caption).foregroundStyle(.secondary)
+                Button(capture.isRecording ? "请按键…" : "录制热键") {
+                    if capture.isRecording { capture.stop() } else { capture.start() }
+                }
+                .buttonStyle(.bordered)
+            }
+            if !capture.conflictMessage.isEmpty {
+                Text(capture.conflictMessage).font(.caption).foregroundStyle(.red)
             }
 
             Divider()
@@ -84,6 +90,16 @@ struct SettingsView: View {
             }
         }
         .padding(20)
-        .frame(width: 460, height: 300)
+        .frame(width: 460, height: 360)
+        .onReceive(capture.$captured.compactMap { $0 }) { binding in
+            config.hotkey = binding
+            ConfigStore.save(config)
+            NotificationCenter.default.post(name: .snowairHotkeyChanged, object: binding)
+            saved = true
+        }
     }
+}
+
+extension Notification.Name {
+    static let snowairHotkeyChanged = Notification.Name("snowair.hotkey.changed")
 }

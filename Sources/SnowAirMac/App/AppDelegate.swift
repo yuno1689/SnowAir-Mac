@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var config: AppConfig = ConfigStore.load()
     private var permissionGranted = false
     private var recordMenuItem: NSMenuItem?
+    private var longMenuItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 纯菜单栏应用：不显示 Dock 图标、不弹主窗口
@@ -31,6 +32,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         buildMenuBar()
         installHotkey()
         HotkeyManager.setActive(hotkey)
+
+        NotificationCenter.default.addObserver(
+            forName: .snowairHotkeyChanged, object: nil, queue: .main
+        ) { [weak self] note in
+            guard let binding = note.object as? HotkeyBinding else { return }
+            Task { @MainActor in
+                guard let self else { return }
+                self.config.hotkey = binding
+                self.hotkey?.unregister()
+                _ = self.hotkey?.register(keyCode: binding.keyCode, modifiers: binding.modifiers)
+            }
+        }
     }
 
     private func showDemoAnnotation() {
@@ -54,6 +67,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let record = menu.addItem(withTitle: "录屏", action: #selector(toggleRecord), keyEquivalent: "")
         record.target = self
         recordMenuItem = record
+        let long = menu.addItem(withTitle: "长截图", action: #selector(toggleLongCapture), keyEquivalent: "")
+        long.target = self
+        longMenuItem = long
+        menu.addItem(withTitle: "导出上次录屏为 GIF", action: #selector(exportGIF), keyEquivalent: "").target = self
         menu.addItem(NSMenuItem.separator())
         menu.addItem(withTitle: "设置…", action: #selector(openSettings), keyEquivalent: ",").target = self
         menu.addItem(NSMenuItem.separator())
@@ -129,6 +146,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleRecord() {
         RecorderCoordinator.toggle(statusItem: recordMenuItem)
+    }
+
+    @objc private func exportGIF() {
+        RecorderCoordinator.exportLastAsGIF()
+    }
+
+    @objc private func toggleLongCapture() {
+        if LongCaptureCoordinator.isCapturing {
+            LongCaptureCoordinator.stopAndOpenAnnotation(config: config)
+            longMenuItem?.title = "长截图"
+        } else {
+            LongCaptureCoordinator.start()
+            longMenuItem?.title = "停止长截图"
+        }
     }
 
     @objc private func openSettings() {

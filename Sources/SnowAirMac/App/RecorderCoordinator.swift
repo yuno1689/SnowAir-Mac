@@ -8,7 +8,27 @@ enum RecorderCoordinator {
     private static let recorder = ScreenRecorder()
     private static var statusItem: NSMenuItem?
 
-    static var isRecording: Bool { recorder.lastOutputURL != nil }
+    static var isRecording: Bool { recorder.isRecordingIndicator }
+    static var lastMovieURL: URL? { recorder.lastOutputURL }
+
+    /// P1 GIF 导出：把最近一次录制的 MP4 抽帧转 GIF，写入同目录。
+    static func exportLastAsGIF() {
+        guard let movie = lastMovieURL else {
+            AppDelegate.showError("请先完成一次录屏，再导出 GIF")
+            return
+        }
+        Task { @MainActor in
+            do {
+                let data = try await VideoToGIFConverter.convert(videoURL: movie)
+                let gifURL = movie.deletingPathExtension().appendingPathExtension("gif")
+                try data.write(to: gifURL, options: .atomic)
+                // 在 Finder 中选中导出的 GIF，用户可立即看到结果
+                NSWorkspace.shared.activateFileViewerSelecting([gifURL])
+            } catch {
+                AppDelegate.showError(error.localizedDescription)
+            }
+        }
+    }
 
     static func toggle(statusItem: NSMenuItem?) {
         Self.statusItem = statusItem
