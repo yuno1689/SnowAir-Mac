@@ -1,10 +1,11 @@
-# SnowAir Mac · P0 实现
+# SnowAir Mac · P0 + P1 实现
 
-macOS 原生截图与标注工具，对标 SnowAir Windows 版 P0 功能。
+macOS 原生截图与标注工具，对标 SnowAir Windows 版 P0 + P1 功能。
 **目标系统：macOS 14.0+（Sonoma）** ｜ Swift 5.9 ｜ 无第三方依赖。
 
-## 本期已实现（P0）
+## 本期已实现
 
+### P0
 - 菜单栏常驻（无 Dock 图标）
 - 全局热键 ⌥S 触发区域截图
 - 全屏遮罩拖拽框选（Esc 取消）
@@ -13,6 +14,13 @@ macOS 原生截图与标注工具，对标 SnowAir Windows 版 P0 功能。
 - 导出到剪贴板 + `~/Pictures/SnowAir/`（PNG）
 - 设置中心（托盘行为、默认工具、剪贴板开关）
 - 配置持久化 + 便携模式（App 同目录放空 `config.json`）
+
+### P1
+- **OCR 文字识别**：标注界面点「OCR」，Vision 准确级中英混排识别，结果可一键复制
+- **长截图拼接**：核心提供固定重叠像素法的纵向拼接算法（支持手动抓帧兜底）
+- **贴图置顶**：标注界面点「贴图」，生成无边框置顶浮窗，可拖拽、滚轮缩放、点击关闭
+- **录屏 MP4**：菜单栏「录屏」开始/停止，ScreenCaptureKit + AVAssetWriter 写入 `~/Movies/SnowAir/`
+- **真机 UI 截图**：self-hosted runner 演示模式 + `scripts/capture-ui.sh`，详见 `deliverables/SnowAir-Mac-自建Runner真机截图指南.md`
 
 ## 编译方式一：云 Mac（无需本地 Mac）
 
@@ -45,7 +53,7 @@ swift build -c release
 swift package generate-xcodeproj   # 若已移除该命令，直接用 Xcode 打开 Package.swift
 ```
 
-> 编译状态（2026-11-26）：云 Mac CI 全绿 —— Debug 编译 / 单元测试 6/6 / Release 编译 全部通过。
+> 编译状态（2026-11-26）：云 Mac CI 全绿 —— Debug 编译 / 单元测试 11/11 / Release 编译 全部通过（含真实 Vision OCR 识别）。
 > 仓库：https://github.com/yuno1689/SnowAir-Mac
 
 > 注意：SPM 构建的可执行文件需要 `Info.plist`（已在 `Sources/SnowAirMac/Info.plist`）。
@@ -66,10 +74,13 @@ Sources/
     Annotation/ShapeRenderer   7 种图形绘制（含马赛克像素化）
     Annotation/ImageExporter   标注合成导出
     Capture/ScreenCapturer     ScreenCaptureKit 截图与裁剪
+    Capture/LongCaptureStitcher 长截图纵向拼接算法
+    Capture/ScreenRecorder     录屏核心（SCStream + AVAssetWriter → MP4）
+    OCR/OCRService             Vision 中英文字识别
   SnowAirMac/          App 层
-    App/                       入口、托盘、热键、权限、配置、导出
-    UI/                        选区窗口、标注画布、工具栏、设置
-Tests/SnowAirCoreTests/        契约不变量与渲染测试
+    App/                       入口、托盘、热键、权限、配置、导出、录屏协调、演示模式
+    UI/                        选区窗口、标注画布、工具栏、设置、贴图浮窗
+Tests/SnowAirCoreTests/        契约、渲染、OCR、长截图拼接测试（11 项）
 ```
 
 ## ⚠️ 需真机验证的项（本机 Windows 无法编译，未验证部分）
@@ -85,11 +96,11 @@ Tests/SnowAirCoreTests/        契约不变量与渲染测试
 
 如发现问题，把编译错误或现象发我，直接改代码。
 
-## 已知降级/未完成（P1 范围，本期不含）
+## 已知降级/未完成
 
-- OCR、长截图、贴图、录屏（P1，规划文档第 4 节）
+- 长截图自动滚动：当前提供拼接核心 + 手动抓帧兜底，自动滚动触发策略待真机打磨
+- 录屏仅视频（无系统音频）、仅 MP4（GIF 编码风险 R5 暂不做）
 - 改键 UI（设置里显示默认值，暂不可改）
-- GIF 编码（风险 R5，先出 MP4）
 - 截图历史、AI、翻译、演示画布（P2）
 
 ## 许可
